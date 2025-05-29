@@ -1,14 +1,28 @@
 import dash_leaflet as dl
+import pandas as pd
 from dash import Dash
 from dash_extensions.enrich import DashProxy, Input, Output, html
+
+pontos = pd.read_csv("./bares_restaurantes.csv",sep=';')
+
+markers = []
+for _, row in pontos.iterrows():
+    markers.append(
+        dl.Marker(
+            position=[row['LATITUDE'], row['LONGITUDE']],
+            children=[dl.Tooltip(row['NOME_FANTASIA'])],
+            draggable=False
+        )
+    )
+
 
 app = DashProxy()
 app.layout = dl.Map(
        [dl.TileLayer(), 
-        dl.Marker(position=[55, 10])
+        *markers
        ],
        center=[-19.926214367710706, -43.93821802072859], 
-       zoom=10, style={"height": "60vh"},
+       zoom=10, style={"height": "90vh"},maxZoom=15,
        id = 'map'), html.Button("fly to home", id="btn"),
 
 
