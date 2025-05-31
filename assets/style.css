@@ -1,0 +1,4 @@
+/* Escondendo o botão de apagar da ferramenta de desenhar retângulos*/
+.leaflet-draw-edit-remove {
+  display: none !important;
+}
