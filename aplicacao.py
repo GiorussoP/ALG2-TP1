@@ -7,7 +7,7 @@ import plotly.graph_objects as go
 from plotly.subplots import make_subplots
 
 # Limites do mapa (alterar se necessário)
-max_bounds = [[-20.111472, -44.407691], [-19.530436, -43.613047]]
+max_bounds = [[-20.029366, -44.067056], [-19.761008, -43.853582]]
 
 #Leio os pontos do csv
 pontos = pd.read_csv("./dados/bares_restaurantes.csv",sep=';')
@@ -110,8 +110,8 @@ app.layout = html.Div([
         style={'height': '100vh'},
         
         # Limitando a região a BH
-        maxZoom=18,
-        minZoom=11,
+        maxZoom=20,
+        minZoom=12,
         maxBounds=max_bounds,
         maxBoundsViscosity=1.0
     ),
