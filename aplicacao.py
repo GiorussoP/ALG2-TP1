@@ -6,11 +6,30 @@ import json
 import plotly.graph_objects as go
 from plotly.subplots import make_subplots
 
+
+from _2d_tree import node, _2d_tree
+from tree_csv_aux_functions import build_aux_structures, format_results
+
+
+data_path = "./dados/bares_restaurantes.csv"
+
+# Montando 2d tree
+data_vector = []
+points = []
+points, data_vector = build_aux_structures(data_path)
+tree = _2d_tree()
+tree.build(points)
+print("Pontos na 2d-tree:",tree.__len__())
+
+
+
+
+
 # Limites do mapa (alterar se necessário)
 max_bounds = [[-20.029366, -44.067056], [-19.761008, -43.853582]]
 
 #Leio os pontos do csv
-pontos = pd.read_csv("./dados/bares_restaurantes.csv",sep=';')
+pontos = pd.read_csv(data_path,sep=';')
 
 # Formatar informações de endereço
 pontos["ENDERECO_COMPLETO"] = (pontos["DESC_LOGRADOURO"] + " " + 
@@ -93,66 +112,113 @@ edit_control = dl.EditControl(
 )
 
 app.layout = html.Div([
-    dl.Map(
-        id="map",
-        center=[-19.922746, -43.945142],
-        zoom=16,
-        children=[
-            dl.TileLayer(),
-            dl.FeatureGroup([edit_control]), # A ferramenta de desenho
-             dl.GeoJSON(
-                    data=geojson_data,
-                    cluster=True,
-                    zoomToBoundsOnClick=True,
-                    superClusterOptions={"radius": 100},
-                )
-        ],
-        style={'height': '100vh'},
-        
-        # Limitando a região a BH
-        maxZoom=20,
-        minZoom=12,
-        maxBounds=max_bounds,
-        maxBoundsViscosity=1.0
-    ),
-    dcc.Graph(
+     html.Div(dcc.Graph(
         id='tabela-estabelecimentos',
         figure=fig
+    ), 
+    style={
+                'flex': '1',        
+                'maxWidth': '100%',  
+                'overflowY': 'auto',
+                'padding': '10px'
+        }
+    ),
+    html.Div(dl.Map(
+            id="map",
+            center=[-19.922746, -43.945142],
+            zoom=16,
+            children=[
+                dl.TileLayer(),
+                dl.FeatureGroup([edit_control]), # A ferramenta de desenho
+                dl.GeoJSON(
+                        data=geojson_data,
+                        cluster=True,
+                        zoomToBoundsOnClick=True,
+                        superClusterOptions={"radius": 200},
+                    )
+            ],
+            style={'height': '100vh'},
+            
+            # Limitando a região a BH
+            maxZoom=20,
+            minZoom=12,
+            maxBounds=max_bounds,
+            maxBoundsViscosity=1.0
+        ),
+        style={
+                'flex': '2',
+                'padding': '10px'
+        }
     )
-])
+    ],
+    style={
+        'display': 'flex',
+        'height': '100vh'
+    }
+
+)
 
 # Callback ativado quando o desenho do retângulo é finalizado
 @app.callback(
+    Output("tabela-estabelecimentos", "figure"),
     Output("edit_control", "editToolbar"),
     Input("edit_control", "geojson")
 )
-def pass_rectangle_coordinates(geojson):
+def update_table_via_tree(geojson):
+    # Se não houver geojson, não atualiza nada.
     if not geojson:
         raise exceptions.PreventUpdate
 
-    # O retângulo está em uma FeatureCollection
+    # Se não houver features, não atualiza nada.
     features = geojson.get("features", [])
     if not features:
-        return "Retângulo não desenhado."
+        return dash.no_update, dash.no_update
 
-    # Obtendo a última forma desenhada
+    # Buscando a última forma desenhada (o retângulo).
     feature = features[-1]
-    geom_type = feature.get("geometry", {}).get("type", "")
-    coords = feature.get("geometry", {}).get("coordinates", [])
+    geom = feature.get("geometry", {})
+    geom_type = geom.get("type", "")
+    coords = geom.get("coordinates", [])
 
-    # Se existir e estiver corretamente formatado
-    if geom_type == "Polygon" and coords:
-        
-        # Escrevendo as coordenadas (para debug, apenas)
-        print("COORDENADAS DO RETANGULO:\n")
-        for c in coords:
-            for b in c:
-                print('\t',b)
+    # Caso não seja um polígono ou não tenha coordenadas, não atualiza nada.
+    if geom_type != "Polygon" or not coords:
+        return dash.no_update, dash.no_update
 
-        # Removendo todas o retângulo desenhado
-        return dict(mode="remove", action="clear all")
-    else:
-        return "Algo que não é um retângulo foi desenhado."
+    min_lon, min_lat = coords[0][0]
+    max_lon, max_lat = coords[0][2]
 
+    # Usando a 2d-tree para buscar os pontos dentro do retângulo.
+    results = tree.range_search((min_lat, max_lat, min_lon, max_lon))
+    print("Tree search results:", results)
+
+    # Filtrando o DataFrame com base nos IDs encontrados.
+    id_list = [node.ID for node in results]
+    print("ID list extracted:", id_list)
+    filtered_df = pontos_formatados.iloc[id_list]
+
+    # Criando tabela com os dados filtrados.
+    new_fig = make_subplots(rows=1, cols=1, specs=[[{"type": "table"}]])
+    new_fig.add_trace(
+        go.Table(
+            header=dict(
+                values=["Nome Fantasia", "Endereço", "Início Atividade", "Possui alvará"],
+                font=dict(size=10),
+                align="left"
+            ),
+            cells=dict(
+                values=[
+                    filtered_df["NOME_FANTASIA"].tolist(),
+                    filtered_df["ENDERECO_COMPLETO"].tolist(),
+                    filtered_df["DATA_INICIO_ATIVIDADE"].tolist(),
+                    filtered_df["IND_POSSUI_ALVARA"].tolist()
+                ],
+                align="left"
+            )
+        ),
+        row=1, col=1
+    )
+
+    # Atualizando tabela e limpando o retângulo desenhado.
+    return new_fig, dict(mode="remove", action="clear all")
 if __name__ == '__main__':
     app.run(debug=True)
