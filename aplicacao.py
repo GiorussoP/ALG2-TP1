@@ -176,7 +176,7 @@ app.layout = html.Div([
             style={'height': '90vh'},
             
             # Limitando a região a BH
-            maxZoom=20,
+            maxZoom=18,
             minZoom=12,
             maxBounds=max_bounds,
             maxBoundsViscosity=1.0
@@ -236,22 +236,30 @@ def update_table_via_tree(geojson):
     new_fig = make_subplots(rows=1, cols=1, specs=[[{"type": "table"}]])
     new_fig.add_trace(
         go.Table(
-            header=dict(
-                values=["Nome Fantasia", "Endereço", "Início Atividade", "Possui alvará"],
-                font=dict(size=10),
-                align="left"
-            ),
-            cells=dict(
-                values=[
-                    filtered_df["NOME_FANTASIA"].tolist(),
-                    filtered_df["ENDERECO_COMPLETO"].tolist(),
-                    filtered_df["DATA_INICIO_ATIVIDADE"].tolist(),
-                    filtered_df["IND_POSSUI_ALVARA"].tolist()
-                ],
-                align="left"
-            )
+        header=dict(
+            values=["Nome Fantasia", "Endereço", "Início Atividade", "Possui alvará"],
+            font=dict(size=14),
+            align="center",
+            height=60,
         ),
-        row=1, col=1
+        cells=dict(
+            values=[
+                filtered_df["NOME_FANTASIA"].tolist(),
+                filtered_df["ENDERECO_COMPLETO"].tolist(),
+                filtered_df["DATA_INICIO_ATIVIDADE"].tolist(),
+                filtered_df["IND_POSSUI_ALVARA"].tolist()
+            ],
+            align="left",
+            height=50,
+            
+        )
+    ),
+    row=1, col=1
+    )
+
+    new_fig.update_layout(
+    margin=dict(l=0, r=0, t=2, b=0),
+    height=None
     )
 
     # Atualizando tabela e limpando o retângulo desenhado.
