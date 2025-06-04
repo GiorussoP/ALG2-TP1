@@ -86,8 +86,9 @@ fig = make_subplots(
 fig.add_trace(
     go.Table(
         header=dict(
-            values=["Nome Fantasia", "Endereço", "Início Atividade", "Possui alvará"],
-            font=dict(size=14),
+            values=["Nome Fantasia", "Endereço", "Início de Atividade", "Possui alvará?"],
+            font=dict(color='black', size=14),
+            fill_color='#FF7B39',
             align="center",
             height=60,
         ),
@@ -98,13 +99,21 @@ fig.add_trace(
                 pontos_formatados["DATA_INICIO_ATIVIDADE"].tolist(),
                 pontos_formatados["IND_POSSUI_ALVARA"].tolist()
             ],
+            font=dict(color='white', size=12),
+            fill_color='#A62C00',  
             align="left",
-            height=50,
-            
+            height=50,  
         )
     ),
     row=1, col=1
 )
+fig.update_layout(
+    paper_bgcolor='#A6000E',
+    plot_bgcolor='#A6000E',
+    margin=dict(l=0, r=0, t=0, b=0)
+)
+
+
 
 app = dash.Dash(__name__)
 
@@ -124,7 +133,7 @@ edit_control = dl.EditControl(
                 "color": "red",
                 "weight": 2,
                 "opacity": 1.0,
-                "fillColor": "orange",
+                "fillColor": "#FF7B39",
                 "fillOpacity": 0.2
             }
         }
@@ -139,59 +148,70 @@ fig.update_layout(
     height=None
 )
 app.layout = html.Div([
-     html.Div(dcc.Graph(
-        id='tabela-estabelecimentos',
-        figure=fig,
-        style={
-        'height': '100%',
-        'width': '100%'
-    }
-    ), 
-    style={
-        'flex': '1.5',          
-        'maxWidth': '100%',
-        'overflowY': 'auto',
-        'padding': '10px',     
-        'height': '90vh',
-        'width': '100%',        
-        'align': 'center',
-        'margin' : '0',
-        'padding' : '0'
-    }
-    ),
-    html.Div(dl.Map(
-            id="map",
-            center=[-19.922746, -43.945142],
-            zoom=16,
-            children=[
-                dl.TileLayer(),
-                dl.FeatureGroup([edit_control]), # A ferramenta de desenho
-                dl.GeoJSON(
-                        data=geojson_data,
-                        cluster=True,
-                        zoomToBoundsOnClick=True,
-                        superClusterOptions={"radius": 200},
-                    )
-            ],
-            style={'height': '90vh'},
-            
-            # Limitando a região a BH
-            maxZoom=18,
-            minZoom=12,
-            maxBounds=max_bounds,
-            maxBoundsViscosity=1.0
+            html.Div([
+                html.H3(
+                    "Selecione uma área para filtrar os bares e restaurantes",
+                    style={"textAlign": "center", "color": "white", "padding": "10px"}
+                ),
+                html.Div(
+                    dcc.Graph(
+                        id='tabela-estabelecimentos',
+                        figure=fig,
+                        config={'displayModeBar': False},
+                        style={
+                            'height': '100vh'
+                        }
+                    ),
+                    style={
+                        'flex': '1'
+                    }
+                )
+            ], 
+            style={
+                "display": "flex", 
+                "flexDirection": "column",
+                'flex': '1',          
+                'maxWidth': '100%',
+                'overflowY': 'auto',    
+                'height': '100vh',
+                'width': '100%',        
+                'align': 'center',
+                'margin' : '0',
+            }
         ),
-        style={
-                'flex': '3',
-                'padding': '10px'
-        }
-    )
+        html.Div(dl.Map(
+                id="map",
+                center=[-19.922746, -43.945142],
+                zoom=16,
+                children=[
+                    dl.TileLayer(
+                        url="https://{s}.basemaps.cartocdn.com/rastertiles/voyager/{z}/{x}/{y}{r}.png"
+                    ),
+                    dl.FeatureGroup([edit_control]), # A ferramenta de desenho
+                    dl.GeoJSON(
+                            data=geojson_data,
+                            cluster=True,
+                            zoomToBoundsOnClick=True,
+                            superClusterOptions={"radius": 200},
+                        )
+                ],
+                style={'height': '100vh'},
+                
+                # Limitando a região a BH
+                maxZoom=18,
+                minZoom=12,
+                maxBounds=max_bounds,
+                maxBoundsViscosity=1.0
+            ),
+            style={
+                    'flex': '3'
+            }
+        )
     ],
     style={
         'display': 'flex',
-        'height': '90vh'
+        'height': '100vh',
     }
-
 )
 
 # Callback ativado quando o desenho do retângulo é finalizado
@@ -238,7 +258,8 @@ def update_table_via_tree(geojson):
         go.Table(
         header=dict(
             values=["Nome Fantasia", "Endereço", "Início Atividade", "Possui alvará"],
-            font=dict(size=14),
+            font=dict(color='black', size=14),
+            fill_color='#FF7B39',
             align="center",
             height=60,
         ),
@@ -249,17 +270,20 @@ def update_table_via_tree(geojson):
                 filtered_df["DATA_INICIO_ATIVIDADE"].tolist(),
                 filtered_df["IND_POSSUI_ALVARA"].tolist()
             ],
+            font=dict(color='white', size=12),
+            fill_color='#A62C00',
             align="left",
-            height=50,
-            
+            height=50
         )
     ),
     row=1, col=1
     )
 
     new_fig.update_layout(
-    margin=dict(l=0, r=0, t=2, b=0),
-    height=None
+        paper_bgcolor='#A6000E',
+        plot_bgcolor='#A6000E',
+        margin=dict(l=0, r=0, t=2, b=0),
+        height=None
     )
 
     # Atualizando tabela e limpando o retângulo desenhado.

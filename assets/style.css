@@ -1,4 +1,35 @@
+html,
+body {
+    background-color: #A6000E !important;
+    color: white !important;
+    margin: 0;
+    padding: 0;
+}
 /* Escondendo o botão de apagar da ferramenta de desenhar retângulos*/
 .leaflet-draw-edit-remove {
   display: none !important;
 }
+
+
+/* Cor dos marcadores */
+.leaflet-marker-icon {
+    filter: hue-rotate(180deg) saturate(5);
+}
+
+/* Cor dos clusters*/
+.marker-cluster {
+    filter: none !important;
+    background-color: red  !important;
+    border: solid #A6000E !important;
+}
+.marker-cluster div {
+    filter: none !important;
+    background-color: red  !important;
+    color: white !important;
+}
+
+
+
+
+
+
