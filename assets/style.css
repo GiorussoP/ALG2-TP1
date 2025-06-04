@@ -4,6 +4,7 @@ body {
     color: white !important;
     margin: 0;
     padding: 0;
+    font-family: 'Helvetica';
 }
 /* Escondendo o botão de apagar da ferramenta de desenhar retângulos*/
 .leaflet-draw-edit-remove {
@@ -27,6 +28,40 @@ body {
     background-color: red  !important;
     color: white !important;
 }
+
+
+
+
+
+
+/* Botão do retângulo */
+.leaflet-draw-draw-rectangle {
+  background-color: #FF7B39 !important;
+  border: 3px solid #A6000E !important;
+}
+.leaflet-draw-draw-rectangle:hover {
+  background-color: tomato !important;
+}
+
+/* Botões de zoom*/
+.leaflet-control-zoom a {
+  background-color: #FF7B39 !important;
+  border: 3px solid #A6000E !important;
+}
+.leaflet-control-zoom a:hover {
+  background-color: tomato !important;
+}
+
+
+
+
+
+
+
+
+
+
+
 
 
 

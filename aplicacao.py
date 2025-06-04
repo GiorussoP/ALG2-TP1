@@ -5,10 +5,11 @@ import dash_leaflet as dl
 import csv
 import plotly.graph_objects as go
 from plotly.subplots import make_subplots
+from dash_extensions.javascript import assign
+
 
 
 from _2d_tree import node, _2d_tree
-from tree_csv_aux_functions import build_aux_structures, format_results
 
 #caminho do csv
 data_path = "./dados/bares_restaurantes.csv"
@@ -36,7 +37,8 @@ for col in pontos_formatados.select_dtypes(include=['object']):
 
 
 #colocando o nome fantasia nos pontos, caso não possua, vai no nome cadastrado
-pontos_formatados["NOME_FANTASIA"] = pontos["NOME_FANTASIA"].fillna(pontos["NOME"]).copy().str.title()
+pontos["NOME_FANTASIA"] = pontos["NOME_FANTASIA"].fillna(pontos["NOME"]).copy().str.title()
+pontos_formatados["NOME_FANTASIA"] = pontos["NOME_FANTASIA"]
 
 
 #vetor de pontos
@@ -86,11 +88,17 @@ fig = make_subplots(
 fig.add_trace(
     go.Table(
         header=dict(
-            values=["Nome Fantasia", "Endereço", "Início de Atividade", "Possui alvará?"],
+            values=[
+                "<b>Nome</b>",
+                "<b>Endereço</b>",
+                "<b>Início da Atividade</b>",
+                "<b>Possui alvará?</b>"
+            ],
             font=dict(color='black', size=14),
             fill_color='#FF7B39',
             align="center",
             height=60,
+            line=dict(color="#A4020C", width=4)
         ),
         cells=dict(
             values=[
@@ -102,7 +110,8 @@ fig.add_trace(
             font=dict(color='white', size=12),
             fill_color='#A62C00',  
             align="left",
-            height=50,  
+            height=50,
+            line=dict(color="#A6000E", width=2)
         )
     ),
     row=1, col=1
@@ -150,8 +159,8 @@ fig.update_layout(
 app.layout = html.Div([
             html.Div([
                 html.H3(
-                    "Selecione uma área para filtrar os bares e restaurantes",
-                    style={"textAlign": "center", "color": "white", "padding": "10px"}
+                    "DESENHE UM RETÂNGULO PARA FILTRAR BARES E RESTAURANTES:",
+                    style={"textAlign": "center", "color": "white", "padding": "10px","fontFamily": "Helvetica"}
                 ),
                 html.Div(
                     dcc.Graph(
@@ -192,7 +201,16 @@ app.layout = html.Div([
                             data=geojson_data,
                             cluster=True,
                             zoomToBoundsOnClick=True,
-                            superClusterOptions={"radius": 200},
+                            superClusterOptions={"radius": 100},
+                            pointToLayer=assign("""
+                                function(feature, latlng) {
+                                    var marker = L.marker(latlng);
+                                    if (feature.properties && feature.properties.name) {
+                                        marker.bindTooltip(feature.properties.name, {direction: 'top'});
+                                    }
+                                    return marker;
+                                }
+                            """)
                         )
                 ],
                 style={'height': '100vh'},
@@ -245,11 +263,11 @@ def update_table_via_tree(geojson):
 
     # Usando a 2d-tree para buscar os pontos dentro do retângulo.
     results = tree.range_search((min_lat, max_lat, min_lon, max_lon))
-    print("Tree search results:", results)
+    #print("Tree search results:", results)
 
     # Filtrando o DataFrame com base nos IDs encontrados.
     id_list = [node.ID for node in results]
-    print("ID list extracted:", id_list)
+    #print("ID list extracted:", id_list)
     filtered_df = pontos_formatados.iloc[id_list]
 
     # Criando tabela com os dados filtrados.
@@ -257,11 +275,17 @@ def update_table_via_tree(geojson):
     new_fig.add_trace(
         go.Table(
         header=dict(
-            values=["Nome Fantasia", "Endereço", "Início Atividade", "Possui alvará"],
+            values=[
+                "<b>Nome</b>",
+                "<b>Endereço</b>",
+                "<b>Início da Atividade</b>",
+                "<b>Possui alvará?</b>"
+            ],
             font=dict(color='black', size=14),
             fill_color='#FF7B39',
             align="center",
             height=60,
+            line=dict(color="#A4020C", width=4)
         ),
         cells=dict(
             values=[
@@ -273,7 +297,8 @@ def update_table_via_tree(geojson):
             font=dict(color='white', size=12),
             fill_color='#A62C00',
             align="left",
-            height=50
+            height=50,
+            line=dict(color="#A6000E", width=2)
         )
     ),
     row=1, col=1
