@@ -2,7 +2,7 @@ import dash
 from dash import html, Output, Input, exceptions, dcc
 import pandas as pd
 import dash_leaflet as dl
-import json
+import csv
 import plotly.graph_objects as go
 from plotly.subplots import make_subplots
 
@@ -10,19 +10,8 @@ from plotly.subplots import make_subplots
 from _2d_tree import node, _2d_tree
 from tree_csv_aux_functions import build_aux_structures, format_results
 
-
+#caminho do csv
 data_path = "./dados/bares_restaurantes.csv"
-
-# Montando 2d tree
-data_vector = []
-points = []
-points, data_vector = build_aux_structures(data_path)
-tree = _2d_tree()
-tree.build(points)
-print("Pontos na 2d-tree:",tree.__len__())
-
-
-
 
 
 # Limites do mapa (alterar se necessário)
@@ -36,40 +25,71 @@ pontos["ENDERECO_COMPLETO"] = (pontos["DESC_LOGRADOURO"] + " " +
                                pontos["NOME_LOGRADOURO"] + ", " + 
                                pontos["NUMERO_IMOVEL"].astype(str) + " " +
                                pontos["COMPLEMENTO"].fillna("") + " - " + 
-                               pontos["NOME_BAIRRO"] + ", Belo Horizonte, MG")
+                               pontos["NOME_BAIRRO"] + ", Belo Horizonte, MG").str.title()
 
 # Criar DataFrame formatado
-pontos_formatados = pontos[["NOME_FANTASIA", "ENDERECO_COMPLETO", "DATA_INICIO_ATIVIDADE", "IND_POSSUI_ALVARA"]]
+pontos_formatados = pontos[["ENDERECO_COMPLETO", "DATA_INICIO_ATIVIDADE", "IND_POSSUI_ALVARA"]]
 
+#formatando as linhas para um tipo Title
+for col in pontos_formatados.select_dtypes(include=['object']):
+    pontos_formatados[col] = pontos_formatados[col].str.title()
+
+
+#colocando o nome fantasia nos pontos, caso não possua, vai no nome cadastrado
+pontos_formatados["NOME_FANTASIA"] = pontos["NOME_FANTASIA"].fillna(pontos["NOME"]).copy().str.title()
+
+
+#vetor de pontos
+points = []
 #transformo eles em json para poder usar a api com maior eficiencia
 #e usar funções que só são possíveis com json
 geojson_data = {
     "type": "FeatureCollection",
     "features": [
-        {
-            "type": "Feature",
-            "geometry": {
-                "type": "Point",
-                "coordinates": [row['LONGITUDE'], row['LATITUDE']]
-            },
-            "properties": {"name": str(row['NOME_FANTASIA']),
-                            "children": [dl.Tooltip(str(row['NOME_FANTASIA']))]
-                           }
-        } for _, row in pontos.iterrows() if pd.notna(row['LATITUDE'])
+            (
+            points.append(
+                node(
+                    ID=idx,
+                    lat=(float(row["LATITUDE"])),
+                    lon=(float(row["LONGITUDE"]))
+                )
+            ),           
+            {  # Retorna o GeoJSON Feature
+                "type": "Feature",
+                "geometry": {
+                    "type": "Point",
+                    "coordinates": [row['LONGITUDE'], row['LATITUDE']]
+                },
+                "properties": {
+                    "name": str(row['NOME_FANTASIA']),
+                    "children": [dl.Tooltip(str(row['NOME_FANTASIA']))]
+                }
+            }
+        )[1]  # Pega apenas o segundo elemento (o GeoJSON Feature)
+        for idx, row in pontos.iterrows()
+        if pd.notna(row['LATITUDE'])  # Filtra coordenadas válidas
     ]
 }
 
+#montando arvore 2d
+tree = _2d_tree()
+tree.build(points)
+print("Pontos na 2d-tree:",tree.__len__())
+
+#montando o subplot da tabela
 fig = make_subplots(
     rows=1, cols=1,
-    specs=[[{"type": "table"}]]
+    specs=[[{"type": "table"}]],
 )
 
+#montando a tabela
 fig.add_trace(
     go.Table(
         header=dict(
             values=["Nome Fantasia", "Endereço", "Início Atividade", "Possui alvará"],
-            font=dict(size=10),
-            align="left"
+            font=dict(size=14),
+            align="center",
+            height=60,
         ),
         cells=dict(
             values=[
@@ -78,7 +98,9 @@ fig.add_trace(
                 pontos_formatados["DATA_INICIO_ATIVIDADE"].tolist(),
                 pontos_formatados["IND_POSSUI_ALVARA"].tolist()
             ],
-            align="left"
+            align="left",
+            height=50,
+            
         )
     ),
     row=1, col=1
@@ -111,17 +133,31 @@ edit_control = dl.EditControl(
     edit={"edit": False, "remove": True}
 )
 
+#atualizando o espaçamento da tabela na div do navegador
+fig.update_layout(
+    margin=dict(l=0, r=0, t=2, b=0),
+    height=None
+)
 app.layout = html.Div([
      html.Div(dcc.Graph(
         id='tabela-estabelecimentos',
-        figure=fig
+        figure=fig,
+        style={
+        'height': '100%',
+        'width': '100%'
+    }
     ), 
     style={
-                'flex': '1',        
-                'maxWidth': '100%',  
-                'overflowY': 'auto',
-                'padding': '10px'
-        }
+        'flex': '1.5',          
+        'maxWidth': '100%',
+        'overflowY': 'auto',
+        'padding': '10px',     
+        'height': '90vh',
+        'width': '100%',        
+        'align': 'center',
+        'margin' : '0',
+        'padding' : '0'
+    }
     ),
     html.Div(dl.Map(
             id="map",
@@ -137,7 +173,7 @@ app.layout = html.Div([
                         superClusterOptions={"radius": 200},
                     )
             ],
-            style={'height': '100vh'},
+            style={'height': '90vh'},
             
             # Limitando a região a BH
             maxZoom=20,
@@ -146,14 +182,14 @@ app.layout = html.Div([
             maxBoundsViscosity=1.0
         ),
         style={
-                'flex': '2',
+                'flex': '3',
                 'padding': '10px'
         }
     )
     ],
     style={
         'display': 'flex',
-        'height': '100vh'
+        'height': '90vh'
     }
 
 )
