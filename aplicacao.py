@@ -12,7 +12,7 @@ from dash_extensions.javascript import assign
 from _2d_tree import node, _2d_tree
 
 #caminho do csv
-data_path = "./dados/bares_restaurantes.csv"
+data_path = "./dados/butecos_matched.csv"
 
 
 # Limites do mapa (alterar se necessário)
@@ -64,7 +64,14 @@ geojson_data = {
                 },
                 "properties": {
                     "name": str(row['NOME_FANTASIA']),
-                    "children": [dl.Tooltip(str(row['NOME_FANTASIA']))]
+                    "tooltip":(
+                        f"{row['NOME_FANTASIA']}"
+                        if pd.isna(row.get("PRATO")) or str(row["PRATO"]).strip() == ""
+                        else f"""{row['NOME_FANTASIA']}<br>
+                                {row['PRATO']}:<br>
+                                {row.get('DESCRICAO_PRATO', '')}<br>
+                                <img src="{row['IMAGEM']}" alt="Imagem do prato" width="200" style="margin-top:5px;">"""
+                    )
                 }
             }
         )[1]  # Pega apenas o segundo elemento (o GeoJSON Feature)
@@ -205,8 +212,8 @@ app.layout = html.Div([
                             pointToLayer=assign("""
                                 function(feature, latlng) {
                                     var marker = L.marker(latlng);
-                                    if (feature.properties && feature.properties.name) {
-                                        marker.bindTooltip(feature.properties.name, {direction: 'top'});
+                                    if (feature.properties && feature.properties.tooltip) {
+                                        marker.bindTooltip(feature.properties.tooltip, {direction: 'top', permanent: false, html: true});
                                     }
                                     return marker;
                                 }
