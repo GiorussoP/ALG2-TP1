@@ -40,3 +40,6 @@ Ao passar o mouse por cima dos marcadores no mapa (hover), é possível observar
 - Plotly: https://plotly.com/python/table-subplots/
 - Dash Leaflet: https://www.dash-leaflet.com/
 - CartoDBBasemapStyles: https://github.com/CartoDB/basemap-styles
+- Python requests: https://pypi.org/project/requests/
+- BeautifulSoup: https://pypi.org/project/beautifulsoup4/
+- Urllib: https://docs.python.org/3/library/urllib.html
