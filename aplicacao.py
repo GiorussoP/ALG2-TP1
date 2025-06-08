@@ -29,16 +29,17 @@ pontos["ENDERECO_COMPLETO"] = (pontos["DESC_LOGRADOURO"] + " " +
                                pontos["NOME_BAIRRO"] + ", Belo Horizonte, MG").str.title()
 
 # Criar DataFrame formatado
-pontos_formatados = pontos[["ENDERECO_COMPLETO", "DATA_INICIO_ATIVIDADE", "IND_POSSUI_ALVARA"]]
+pontos_formatados = pontos[["ENDERECO_COMPLETO", "DATA_INICIO_ATIVIDADE", "IND_POSSUI_ALVARA"]].copy()
 
 #formatando as linhas para um tipo Title
 for col in pontos_formatados.select_dtypes(include=['object']):
-    pontos_formatados[col] = pontos_formatados[col].str.title()
+    pontos_formatados.loc[:,col] = pontos_formatados.loc[:,col].str.title()
 
 
 #colocando o nome fantasia nos pontos, caso não possua, vai no nome cadastrado
-pontos["NOME_FANTASIA"] = pontos["NOME_FANTASIA"].fillna(pontos["NOME"]).copy().str.title()
-pontos_formatados["NOME_FANTASIA"] = pontos["NOME_FANTASIA"]
+pontos.loc[:,"NOME_FANTASIA"] = pontos.loc[:,"NOME_FANTASIA"].fillna(pontos.loc[:,"NOME"]).copy().str.title()
+pontos_formatados.loc[:, "NOME_FANTASIA"] = pontos["NOME_FANTASIA"]
+
 
 
 #vetor de pontos
@@ -65,12 +66,34 @@ geojson_data = {
                 "properties": {
                     "name": str(row['NOME_FANTASIA']),
                     "tooltip":(
-                        f"{row['NOME_FANTASIA']}"
+                        f"<strong>{row['NOME_FANTASIA']}</strong>"
                         if pd.isna(row.get("PRATO")) or str(row["PRATO"]).strip() == ""
-                        else f"""{row['NOME_FANTASIA']}<br>
-                                {row['PRATO']}:<br>
-                                {row.get('DESCRICAO_PRATO', '')}<br>
-                                <img src="{row['IMAGEM']}" alt="Imagem do prato" width="200" style="margin-top:5px;">"""
+                        else f"""
+                            <div style="width: 200px; margin: 0 auto; overflow-wrap: break-word; white-space: normal;">
+                                <div style="text-align: center;">
+                                    <strong>{row['NOME_FANTASIA']}</strong><br>(Estabelecimento participante do festival <strong>Comida Di Buteco 2025</strong>)<br>
+                                </div>
+                                <div style="text-align: left; padding-left: 0px; margin-top: 10px;">
+                                    Prato concorrente:<br>
+                                </div>
+                                <div style="background-color: #A6000E; padding: 10px; border-radius: 5px; box-sizing: border-box; color: white;">
+
+                                    <div style="text-align: left; padding-left: 0px; margin-top: 10px;">
+                                        <strong>{row['PRATO']}</strong><br>
+                                    <div style="text-align: center; margin-top: 10px;">
+                                        <!-- The image now fills the container's inner width -->
+                                        <img src="{row['IMAGEM']}" alt="Imagem do prato" style="width: 100%; height: auto; margin-top: 5px;border: 2px #A4020C;">
+                                    </div>
+
+                                    <div style="text-align: left; padding-left: 0px; margin-top: 10px;">
+                                        {row.get('DESCRICAO_PRATO', '')}
+                                    </div>
+                                </div>
+                            </div>
+                            """
+
+
+
                     )
                 }
             }
@@ -321,4 +344,4 @@ def update_table_via_tree(geojson):
     # Atualizando tabela e limpando o retângulo desenhado.
     return new_fig, dict(mode="remove", action="clear all")
 if __name__ == '__main__':
-    app.run(debug=True)
+    app.run(debug=False)
