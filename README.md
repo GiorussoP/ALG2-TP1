@@ -1,5 +1,3 @@
-## Lembrar de tornar repositório público até dia 11/06/2025!!!
-
 # Trabalho Prático de Algoritmos 2: Geometria Computacional
 Este repositório contém a implementação de um trabalho prático da disciplina Algoritmos 2 - UFMG que aborda os aspectos práticos dos algoritmos de geometria computacional. Especificamente, são explorados aspectos de implementação de árvores k-dimensionais para realização de busca ortogonal em conjuntos de pontos. 
 
