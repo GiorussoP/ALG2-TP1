@@ -29,6 +29,9 @@ Após desenhar a área retangular, a busca será realizada em uma 2-D Tree. O re
 
 ![image](./resources/readme_images/table.png)
 
+### Desfazendo o filtro
+Para desfazer um filtro criado, é possível desenhar outro filtro. Para desfazer todos, basta recarregar a página.
+
 ### Vendo os pratos concorrentes do Comida Di Buteco 2025
 Ao passar o mouse por cima dos marcadores no mapa (hover), é possível observar os nomes de cada estabelecimento. Porém, alguns dos restaurantes e bares de Belo Horizonte estão participando do festival Comida Di Buteco 2025. Ao passar o mouse sobre eles, é possível visualizar as informações básicas do prato concorrente no festival, assim como a sua imagem, publicada no site oficial:
 
