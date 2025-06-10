@@ -3,6 +3,8 @@ Este repositório contém a implementação de um trabalho prático da disciplin
 
 Além de trabalhar aspectos teóricos, este projeto envolve a integração de bibliotecas de manipulação e plotagem de mapas e dados geográficos, assim como pratica o tratamento de bases reais.
 
+# [Página interativa](https://alg2-tp1-b7ke.onrender.com)
+
 ## Bases de dados utilizadas
 - Base de atividades econômicas da PBH (2025-04-01): https://dados.pbh.gov.br/dataset/atividades-economicas1
 - Restaurantes concorrentes do festival Comida di Buteco: https://comidadibuteco.com.br/butecos/belo-horizonte/
